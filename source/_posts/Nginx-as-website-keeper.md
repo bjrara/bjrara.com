@@ -83,7 +83,7 @@ server {
 ```
 
 ### Limitate incomming requests
-*Implementation is all reserverd by [the link](http://drops.wooyun.org/tips/734).*
+*The implementation is all reserverd by [the link](http://drops.wooyun.org/tips/734).*
 
 Define limit_req_zone under **http** context:
 ```javascript
@@ -95,9 +95,9 @@ Description:
 
 In this case, a zone named "session_limit" would keep all the requests by key $cookie_token in a 10 megabyte shared memory, and an average request processing rate for this zone cannot exceed 30 request per second.
 
-Under location / , we introduce lua scripts to make more intelligent strategies:
+Under `location /` , we introduce lua scripts to make more intelligent strategies:
 
-Here, we add a new token with ip address and a random number from 0-999999 encrypted by md5 to visitors' session. Line `limit_req zone=session_limit burst=50 nodelay;` states if the requests rate exceeds the rate configured for **session_limit**, their processing will be terminated such that requests are processed at a defined rate.
+Here, we add a new token with ip address and a random number from 0-999999 encrypted by MD5 to visitors' session. Line `limit_req zone=session_limit burst=50 nodelay;` states if the requests rate exceeds the rate configured for **session_limit**, their processing will be terminated such that requests are processed at a defined rate.
 
 ```javascript
 location / {
@@ -119,13 +119,52 @@ location / {
 }
 ```
 
-The whole configuration tells nginx if it is a "nice" visitor, routes his/her requests to port 8080 and visits the website; if the user with the same cookie continues requesting the website for more than 30 requests per second, declines all the excessive requests all at once, put him to "bad" visitor list until the rate comes down to the expected 30 r/s and makes him out again.
+Think of requests as guests, and the limitation the law of defining good and evil. The whole configuration works like a keeper who tells nginx whether the guest waiting outside is a nice guy or not. If yes, routes his/her requests to port 8080 and visits the website. The guest with the same cookie requesting the website for more than 30 requests per second will be treated as breaking the law, nginx will refuse all his/her excessive requests all at once, and put him/her into "evil guest" jail until the rate comes down to the expected 30 r/s and cancel the pendalty.
 
 ### Cache static resources
-//TODO
+> This part works as an optimization to reduce static resource requests to backend service, preparing your website for heavy traffic.
 
-You can use the following commands to reload/stop nginx
-```sh
-$ sudo ./nginx -s reload
-$ sudo ./nginx -s quit
+*The implementation is all reserverd by [the link](http://weizhifeng.net/nginx-proxy-cache.html).*
+
+Take facebook as an example, when you open your profile, except a simple request for a php page, your browser is requesting 20 or more css & js files. These static resources remain constant - unchanged for a relatively long time. What's more, most likely these css/js files and other images like icons or banners have been used many times at different pages. The server has to transfer them to users' browsers again and again whenever a page is being opened. Why shall we bother our website for those changeless stuff?
+
+So highly-available (and fast) server as nginx could help us cache static resources and directly respond to resource requests.
+
+Define proxy_cache_path under **http** context:
+```javascript
+proxy_cache_path /usr/local/nginx/proxy_cache/cache1 levels=1:2 keys_zone=cache1:100m inactive=1d max_size=10g;
 ```
+
+"It sets the path and other parameters of a cache. Cache data are stored in files.  The levels parameter defines hierarchy levels of a cache." In this case, cache files will look like
+
+/usr/local/nginx/proxy_cache/cache1/c/29/b7f54b2df7773722d382f4809d65029c.
+
+Other parameters define active key information and key expire time. For more information, please read [ngx_http_proxy_module#proxy_cache_path](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_path).
+
+Create a new location under **server** context, before or after `location /`. No constraint order is required.
+
+```javascript
+location ~ .(jpg|png|gif|css|js|woff)$ {
+	proxy_cache cache1;
+    proxy_cache_key $host$uri;
+    proxy_cache_valid 200 202 304 10m;
+    expires 30d;
+    proxy_pass http://apache_servers;
+}
+```
+
+When nginx get requests of static files with extension jpg|png|gif|css|js|woff, it firstly tries to get file with key $host$uri from cache1. When the file doesn't exists, it sends a request to the backend server. If the response status code is either 200/202/304, the file would be saved to cache1 for 10 minutes. Meanwhile, "Expires" header would be added to response header fields with a value equivalent to 30 days.
+
+* Reload/restart Nginx to make configuration take effects:
+You can use the following commands to reload/restart nginx
+```sh
+// reload
+$ sudo ./nginx -s reload
+
+// restart
+$ sudo ./nginx -s quit
+$ sudo ./nginx
+```
+
+ENJOY!
+===
