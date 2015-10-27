@@ -20,12 +20,12 @@ Prerequisites:
 ======
 * A vps/server running linux/osx system
 
-For linux users, making sure packages in the following are installed:
+For linux users, make sure packages in the following are installed:
 * gcc-c++
 * pcre, pcre-devel
 * lua, lua-devel (5.1)
 
-For osx users, making sure packages in the following are installed:
+For osx users, make sure packages in the following are installed:
 * c++ compiler (installing xcode is recommended)
 * pcre
 * lua (5.1)
