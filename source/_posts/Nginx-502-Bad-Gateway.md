@@ -42,7 +42,7 @@ Root causes:
 
 * Connection reset by upstream server.
 
-    Most often, the upstream server is one to blame. However, if nginx uses keepalive connections to talk to upstream server, the upstream host server resets the connection without the client being notified occasionally. For more information, check the answer: [Apache HttpClient Interim Error: NoHttpResponseException](http://stackoverflow.com/questions/10558791/apache-httpclient-interim-error-nohttpresponseexception/10600762#10600762)
+    Most often, the upstream server is the one to blame. However, if nginx uses keepalive connections to talk to upstream server, the upstream host server might reset the connection without the client being notified occasionally. For more information, check the answer: [Apache HttpClient Interim Error: NoHttpResponseException](http://stackoverflow.com/questions/10558791/apache-httpclient-interim-error-nohttpresponseexception/10600762#10600762)
 
     Solution:
 
