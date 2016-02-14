@@ -13,8 +13,8 @@ categories: lovely java
 @Aspect
 public class SomeAspect {
 
-	// This resource contains injection that has circular depencies for example.
-	@Resource
+    // This resource contains injection that has circular depencies for example.
+    @Resource
     private CircularService circularService;
 
     @Around("execution(* com.bjrara.test..*Repository.*(..)) || " +
@@ -60,7 +60,7 @@ Spring 创建 bean 主要通过两种途径，一种是 JDK dynamic proxies，�
 
 注意，**@AspectJ 只是一种注入风格，使用 @AspectJ 并不会使用 aspectj 进行织入**，那么问题来了，为什么明明只是一种风格，却会导致 Spring 创建 bean 时注入失败呢？
 
-原因在于：aspect 的 scope 采用了 singleton 模式。对于普通的 resource 资源，只有在需要的时候才会被创建出来，而对于 singleton 资源，在 Spring container 创建之初就会被创建出来。这里可能会发生类似 constructor injection 循环依赖导致创建 bean 失败的问题。
+原因在于：aspect 的 scope 为 singleton 模式。对于普通的 resource 资源，只有在需要的时候才会被创建出来，而对于 singleton 资源，在 Spring container 创建之初就会被创建出来。这里可能会发生类似 constructor injection 循环依赖导致创建 bean 失败的问题。
 
 [Reference](http://docs.spring.io/spring/docs/current/spring-framework-reference/html/aop.html#aop-instantiation-models)
 > By default there will be a single instance of each aspect within the application context. AspectJ calls this the singleton instantiation model.
