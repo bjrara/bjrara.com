@@ -51,3 +51,12 @@ SO_REUSEADDR       socketA        socketB       Result
    ON          192.168.1.0:21       0.0.0.0:21    OK
   ON/OFF           0.0.0.0:21       0.0.0.0:21    Error (EADDRINUSE)
 ```
+
+上述图表假设 socketA 已完成与所分配地址的绑定，然后基于 SO_REUSEADDR 开关尝试进行 socketB 绑定，Result 列表示绑定结果。当第一列 SO_REUSEADDR 的值为 ON/OFF，则表示最终结果不受 SO_REUSEADDR 开关影响。
+
+
+SO_REUSEADDR 不仅仅作用与 wildcard addr，该配置之所以在服务器程序被广泛运用还有一个非常重要的原因。在解释第二个原因之前，先来看看 TCP 协议的运作机制。
+
+成功调用 send() 函数后，socket 会生成一个 send buffer，此时并不代表请求数据已经被成功发送出去，仅表示数据已经加入到 send buffer。对 UDP socket，即便数据没有即可发送出去，所等待的时间通常也非常短。但对 TCP socket 而言，从数据加入缓存到真正发送出去的延时相对会长很多。所以，当你关闭了一个 TCP socket，send buffer 中可能依然存在没有发送出去的缓存数据，但你的程序在调用 send() 后就认为数据已经发送了。如果 TCP 程序此时立即关闭 socket，所有的数据就会丢失，而你的程序对此毫无感知。我们常说 TCP 是可靠协议，但在丢失数据这件事上，TCP 显得没有那么可靠。这就是为什么，当你关闭一个包含需要发送但尚未发送数据的 socket 时，它的状态会被置为 **TIME_WAIT**。socket 会等待所有 buffer 中的数据发送完毕后才执行关闭，或等到 timewait 超时，强制关闭。
+
+无论 socket 中是否包含尚未发送的数据，内核等待关闭 socket 的那段时间，被称为 Linger Time。Linger Time 在大部分系统中都是全局可配的，默认时间相对较长（大部分系统设置均为2分钟）。针对单个 socket 也可通过 SO_LINGER 进行配置。
