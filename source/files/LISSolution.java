@@ -5,25 +5,20 @@ import java.util.Arrays;
 /**
  * Created by mengyizhou on 2017/1/1.
  */
-public class LIS {
-    public static void main(String[] args) {
-        System.out.println(lengthOfLIS(new int[]{10, 9, 2, 5, 3, 7, 101, 18}));
-    }
+public class LISSolution {
 
     // O(nlogn)
-    private static int lengthOfLIS(int[] nums) {
+    public int maxLength(int[] nums) {
         int[] dp = new int[nums.length];
         for (int i = 0; i < nums.length; i++) {
             dp[i] = Integer.MAX_VALUE;
         }
         for (int j = 0; j < nums.length; j++) {
-/**************************** raw ****************************/
-/*            for (int i = j; i >= 0; i--) {                 */
-/*                if (i == 0 || dp[i - 1] < nums[j]) {       */
-/*                    dp[i] = min(dp[i], nums[j]);           */
-/*                }                                          */
-/*            }                                              */
-/**************************** raw ****************************/
+//            for (int i = j; i >= 0; i--) {
+//                if (i == 0 || dp[i - 1] < nums[j]) {
+//                    dp[i] = min(dp[i], nums[j]);
+//                }
+//            }
             // idx=(-(insertion point) - 1), the index of the first element in the range greater than the key
             int idx = Arrays.binarySearch(dp, 0, j, nums[j]);
             if (idx < 0) dp[-(idx + 1)] = nums[j];
@@ -38,7 +33,7 @@ public class LIS {
     }
 
     // O(n^2)
-    private static int lengthOfLIS0(int[] nums) {
+    public int maxLength0(int[] nums) {
         int[] dp = new int[nums.length];
         for (int i = 0; i < nums.length; i++) {
             dp[i] = 1;
@@ -53,7 +48,7 @@ public class LIS {
         return dp[nums.length - 1];
     }
 
-    private static int max(int i, int j) {
+    private int max(int i, int j) {
         return i < j ? j : i;
     }
 }
